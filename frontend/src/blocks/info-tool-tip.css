@@ -1,0 +1,18 @@
+.info-tool-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.info-tool-tip__image {
+  max-width: 120px;
+}
+
+.info-tool-tip__message {
+  font-style: normal;
+  font-weight: 900;
+  font-size: 24px;
+  line-height: 29px;
+  color: #000000;
+}
