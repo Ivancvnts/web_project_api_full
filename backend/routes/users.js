@@ -10,9 +10,7 @@ const users = require("express").Router();
 
 users.get("/", getUsers);
 
-users.get("/:id", getUser);
-
-users.post("/", createUser);
+users.get("/me", getUser);
 
 users.patch("/me", updateUser);
 

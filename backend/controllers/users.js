@@ -2,30 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-module.exports.getUsers = (req, res, next) => {
-  User.find({})
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      next(err);
-    });
-};
-
-module.exports.getUser = (req, res, next) => {
-  User.findById(req.params.id)
-    .orFail(() => {
-      const error = new Error("No se ha encontrado ningun usuario con esa id");
-      error.statusCode = 404;
-      throw error;
-    })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === "CastError") {
-        err.statusCode = 400;
-        err.message = "ID de usuario no valido";
-      }
-      next(err);
-    });
-};
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports.createUser = (req, res, next) => {
   const { email, password, name, about, avatar } = req.body;
@@ -50,6 +27,51 @@ module.exports.createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === "ValidationError") {
         err.statusCode = 400;
+      }
+      next(err);
+    });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === "production" ? JWT_SECRET : "around-secreto",
+        {
+          expiresIn: "7d",
+        },
+      );
+      res.send({ token });
+    })
+    .catch((err) => {
+      err.statusCode = 401;
+      next(err);
+    });
+};
+
+module.exports.getUsers = (req, res, next) => {
+  User.find({})
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      next(err);
+    });
+};
+
+module.exports.getUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .orFail(() => {
+      const error = new Error("No se ha encontrado ningun usuario con esa id");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.name === "CastError") {
+        err.statusCode = 400;
+        err.message = "ID de usuario no valido";
       }
       next(err);
     });
@@ -106,20 +128,5 @@ module.exports.updateAvatar = (req, res, next) => {
         err.message = "Datos invalidos";
       }
       next(err);
-    });
-};
-
-module.exports.login = (req, res, next) => {
-  const { email, password } = req.body;
-
-  User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, "mi-llave-secreta", {
-        expiresIn: "7d",
-      });
-      res.send({ token });
-    })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
     });
 };

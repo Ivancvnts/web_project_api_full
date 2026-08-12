@@ -1,8 +1,11 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const users = require("./routes/users");
 const cards = require("./routes/cards");
-const { createUser, login } = require("../controllers/users");
+const { createUser, login } = require("./controllers/users");
+const auth = require("./middleware/auth");
 
 const app = express();
 
@@ -17,6 +20,8 @@ app.use(express.json());
 
 app.post("/signin", login);
 app.post("/signup", createUser);
+
+app.use(auth);
 
 app.use("/users", users);
 app.use("/cards", cards);

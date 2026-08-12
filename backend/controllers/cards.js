@@ -24,17 +24,26 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndDelete(req.params.id)
+  Card.findById(req.params.id)
     .orFail(() => {
-      const error = new Error("No se ha encontrado ninguna card con esa id");
+      const error = new Error("No se ha encontrado ninguna tarjeta con esa id");
       error.statusCode = 404;
       throw error;
     })
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card.owner.toString() !== req.user._id) {
+        const error = new Error("No tienes permiso para borrar esta tarjeta");
+        error.statusCode = 403;
+        throw error;
+      }
+      return Card.findByIdAndDelete(req.params.id).then((deletedCard) =>
+        res.send({ data: deletedCard }),
+      );
+    })
     .catch((err) => {
-      if (err.name === "CastError" || err.name === "ValidationError") {
+      if (err.name === "CastError") {
         err.statusCode = 400;
-        err.message = "Datos invalidos";
+        err.message = "ID de la tarjeta no valida";
       }
       next(err);
     });

@@ -48,7 +48,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
   email,
   password,
 ) {
-  this.findOne({ email }).then((user) => {
+  return this.findOne({ email }).then((user) => {
     if (!user) {
       return Promise.reject(
         new Error("Correo electrónico o contraseña no válidos."),
