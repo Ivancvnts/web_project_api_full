@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 module.exports.getUsers = (req, res, next) => {
@@ -26,9 +28,25 @@ module.exports.getUser = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.status(201).send({ data: user }))
+  const { email, password, name, about, avatar } = req.body;
+
+  bcrypt
+    .hash(password, 10)
+    .then((hash) =>
+      User.create({
+        email: email,
+        password: hash,
+        name: name,
+        about: about,
+        avatar: avatar,
+      }),
+    )
+    .then((user) => {
+      res.status(201).send({
+        _id: user._id,
+        email: user.email,
+      });
+    })
     .catch((err) => {
       if (err.name === "ValidationError") {
         err.statusCode = 400;
@@ -88,5 +106,20 @@ module.exports.updateAvatar = (req, res, next) => {
         err.message = "Datos invalidos";
       }
       next(err);
+    });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, "mi-llave-secreta", {
+        expiresIn: "7d",
+      });
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
     });
 };
