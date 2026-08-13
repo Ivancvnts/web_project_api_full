@@ -53,6 +53,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select("+password")
     .then((user) => {
       if (!user) {
+        console.log(user);
         return Promise.reject(
           new Error("Correo electrónico o contraseña no válidos."),
         );

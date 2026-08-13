@@ -1,8 +1,14 @@
+import { useContext } from "react";
+import { CurrentUserContext } from "../../../contexts/CurrentUserContext";
 import PopupWithConfirmation from "../Popup/PopupWithConfirmation/PopupWithConfirmation";
 
 function Card(props) {
   const { card, onPopupOpen, imageComponent, onCardLike, onCardDelete } = props;
-  const { name, link, isLiked } = card;
+  const { name, link, likes, owner } = card;
+  const { currentUser } = useContext(CurrentUserContext);
+
+  const isLiked = likes.some((id) => id === currentUser._id);
+  const isOwn = owner._id === currentUser._id;
 
   const newCardPopup = {
     title: "¿Estás seguro?",
@@ -14,7 +20,6 @@ function Card(props) {
   }`;
 
   function handleLikeClick() {
-    card.isLiked = !card.isLiked;
     onCardLike(card);
   }
 
@@ -30,12 +35,14 @@ function Card(props) {
         alt=""
         onClick={() => onPopupOpen(imageComponent)}
       />
-      <button
-        aria-label="Eliminar tarjeta"
-        className="card__delete-button"
-        type="button"
-        onClick={handleDeleteClick}
-      ></button>
+      {isOwn && (
+        <button
+          aria-label="Eliminar tarjeta"
+          className="card__delete-button"
+          type="button"
+          onClick={handleDeleteClick}
+        ></button>
+      )}
       <div className="card__description">
         <h2 className="card__title">{name}</h2>
         <button

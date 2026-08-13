@@ -2,7 +2,7 @@ const Card = require("../models/card");
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
-    .populate("owner")
+    .populate("owner", "name avatar")
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       next(err);
@@ -14,6 +14,7 @@ module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
+    .then((card) => card.populate("owner", "name avatar"))
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === "ValidationError") {
@@ -54,7 +55,7 @@ module.exports.likeCard = (req, res, next) => {
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
       upsert: false,
     },
@@ -79,7 +80,7 @@ module.exports.dislikeCard = (req, res, next) => {
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
       upsert: false,
     },

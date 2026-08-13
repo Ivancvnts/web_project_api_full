@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
 import api from "../utils/api.js";
-import * as auth from "../utils/auth.js";
 import { getToken, setToken, removeToken } from "../utils/token.js";
 
 import Header from "./Header/Header";
@@ -25,6 +24,7 @@ function App() {
   const [popup, setPopup] = useState(null);
   const [cards, setCards] = useState([]);
   const [currentUser, setCurrentUser] = useState({
+    _id: "",
     email: "",
     name: "",
     about: "",
@@ -41,22 +41,13 @@ function App() {
       return;
     }
 
-    auth
-      .getUser(jwt)
-      .then((data) => {
-        setIsLoggedIn(true);
-        handleUpdateEmail(data.data.email);
-        navigate("/");
-      })
-      .catch((err) => console.error(err));
-
     api
-      .getUserInfo()
-      .then((result) => {
-        setCurrentUser((prevUser) => ({
-          ...prevUser,
-          ...result,
-        }));
+      .getUser()
+      .then((data) => {
+        const { _id, email, name, about, avatar } = data.data;
+        setIsLoggedIn(true);
+        setCurrentUser({ _id, email, name, about, avatar });
+        navigate("/");
       })
       .catch((err) => {
         console.log(err);
@@ -68,7 +59,7 @@ function App() {
       api
         .getCardsList()
         .then((result) => {
-          setCards(result);
+          setCards(result.data);
         })
         .catch((err) => {
           console.log(err);
@@ -78,15 +69,15 @@ function App() {
 
   async function handleCardLike(card) {
     // Verifica una vez más si a esta tarjeta ya les has dado like
-    const isLiked = card.isLiked;
+    const isLiked = card.likes.some((_id) => _id === currentUser._id);
 
     // Envía una solicitud a la API y obtén los datos actualizados de la tarjeta
     await api
-      .likeCard(card._id, !isLiked)
+      .likeCard(card._id, isLiked)
       .then((newCard) => {
         setCards((state) =>
           state.map((currentCard) =>
-            currentCard._id === card._id ? newCard : currentCard,
+            currentCard._id === card._id ? newCard.data : currentCard,
           ),
         );
       })
@@ -110,7 +101,8 @@ function App() {
       await api
         .setUserInfo(data)
         .then((newData) => {
-          setCurrentUser(newData);
+          console.log(newData);
+          setCurrentUser(newData.data);
           handleClosePopup();
         })
         .catch((err) => console.error(err));
@@ -124,16 +116,9 @@ function App() {
     });
   };
 
-  const handleUpdateEmail = (email) => {
-    setCurrentUser((prevUser) => ({
-      ...prevUser,
-      email: email,
-    }));
-  };
-
   const handleAddPlaceSubmit = (data) => {
     return api.addCard(data).then((newCard) => {
-      setCards((prevCards) => [newCard, ...prevCards]);
+      setCards((prevCards) => [newCard.data, ...prevCards]);
 
       handleClosePopup();
     });
@@ -155,7 +140,7 @@ function App() {
   }
 
   const handleRegistration = (email, password) => {
-    auth
+    api
       .register(email, password)
       .then(() => {
         handleOpenPopup(getInfoToolTip(true));
@@ -167,26 +152,23 @@ function App() {
   };
 
   const handleLogin = (email, password) => {
-    return auth
+    return api
       .login(email, password)
       .then((data) => {
         if (data.token) {
           setToken(data.token);
-          handleUpdateEmail(email);
           setIsLoggedIn(true);
-          api
-            .getUserInfo()
+
+          return api
+            .getUser()
             .then((result) => {
-              setCurrentUser((prevUser) => ({
-                ...prevUser,
-                ...result,
-              }));
+              const { _id, email, name, about, avatar } = result.data;
+              setCurrentUser({ _id, email, name, about, avatar });
+              navigate("/");
             })
             .catch((err) => {
               console.log(err);
             });
-
-          navigate("/");
         }
       })
       .catch((err) => {
@@ -209,7 +191,6 @@ function App() {
             currentUser,
             handleUpdateUser,
             handleUpdateAvatar,
-            handleUpdateEmail,
           }}
         >
           <Header location={location} handleLogOut={handleLogOut} />

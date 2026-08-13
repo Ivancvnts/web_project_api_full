@@ -2,6 +2,8 @@ require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
+
 const users = require("./routes/users");
 const cards = require("./routes/cards");
 const { createUser, login } = require("./controllers/users");
@@ -14,8 +16,9 @@ mongoose
   .then(() => console.log("Conectado a MongoDB"))
   .catch((err) => console.error("Error de conexión:", err));
 
-const { PORT = 3000 } = process.env;
+const { PORT = 5000 } = process.env;
 
+app.use(cors());
 app.use(express.json());
 
 app.post("/signin", login);

@@ -1,113 +1,107 @@
+import { getToken } from "./token.js";
+
 class Api {
   constructor(options) {
     this.options = options;
   }
 
-  getUserInfo() {
-    return fetch(this.options.baseUrl + "users/me", {
-      headers: this.options.headers,
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
+  _getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${getToken()}`,
+    };
+  }
 
-      return Promise.reject(`Error: ${res.status}`);
-    });
+  _checkResponse(res) {
+    return res.ok ? res.json() : Promise.reject(`Error: ${res.status}`);
+  }
+
+  //--- Auth ---
+  register = (email, password) => {
+    return fetch(this.options.baseUrl + "/signup", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    }).then(this._checkResponse);
+  };
+
+  login = (email, password) => {
+    return fetch(this.options.baseUrl + "/signin", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    }).then(this._checkResponse);
+  };
+
+  //--- Users ---
+  getUser() {
+    return fetch(this.options.baseUrl + "/users/me", {
+      headers: this._getHeaders(),
+    }).then(this._checkResponse);
   }
 
   setUserInfo({ name, about }) {
-    return fetch(this.options.baseUrl + "users/me", {
+    return fetch(this.options.baseUrl + "/users/me", {
       method: "PATCH",
-      headers: this.options.headers,
+      headers: this._getHeaders(),
       body: JSON.stringify({
         name: name,
         about: about,
       }),
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Error: ${res.status}`);
-    });
+    }).then(this._checkResponse);
   }
 
-  getCardsList() {
-    return fetch(this.options.baseUrl + "cards", {
-      headers: {
-        authorization: this.options.headers.authorization,
-      },
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
+  setAvatar(avatar) {
+    return fetch(`${this.options.baseUrl}/users/me/avatar`, {
+      method: "PATCH",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
+        avatar: avatar,
+      }),
+    }).then(this._checkResponse);
+  }
 
-      return Promise.reject(`Error: ${res.status}`);
-    });
+  //--- Cards ---
+  getCardsList() {
+    return fetch(this.options.baseUrl + "/cards", {
+      headers: this._getHeaders(),
+    }).then(this._checkResponse);
   }
 
   addCard({ name, link }) {
-    return fetch(this.options.baseUrl + "cards", {
+    return fetch(this.options.baseUrl + "/cards", {
       method: "POST",
-      headers: this.options.headers,
+      headers: this._getHeaders(),
       body: JSON.stringify({
         name,
         link,
       }),
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-
-      return Promise.reject(`Error: ${res.status}`);
-    });
+    }).then(this._checkResponse);
   }
 
   likeCard(id, isLiked) {
-    return fetch(`${this.options.baseUrl}cards/${id}/likes`, {
+    return fetch(`${this.options.baseUrl}/cards/${id}/likes`, {
       method: isLiked ? "DELETE" : "PUT",
-      headers: this.options.headers,
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Error: ${res.status}`);
-    });
+      headers: this._getHeaders(),
+    }).then(this._checkResponse);
   }
 
   deleteCard(id) {
-    return fetch(`${this.options.baseUrl}cards/${id}`, {
+    return fetch(`${this.options.baseUrl}/cards/${id}`, {
       method: "DELETE",
-      headers: this.options.headers,
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Error: ${res.status}`);
-    });
-  }
-
-  setAvatar(avatar) {
-    return fetch(`${this.options.baseUrl}users/me/avatar`, {
-      method: "PATCH",
-      headers: this.options.headers,
-      body: JSON.stringify({
-        avatar: avatar,
-      }),
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Error: ${res.status}`);
-    });
+      headers: this._getHeaders(),
+    }).then(this._checkResponse);
   }
 }
 
 const api = new Api({
-  baseUrl: "https://around-api.es.tripleten-services.com/v1/",
-  headers: {
-    authorization: "e9c54c1d-7d1b-4a32-808f-b00f8ab88aa4",
-    "Content-Type": "application/json",
-  },
+  baseUrl: "http://localhost:5000",
 });
 
 export default api;
