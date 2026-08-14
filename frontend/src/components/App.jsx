@@ -111,7 +111,7 @@ function App() {
 
   const handleUpdateAvatar = (data) => {
     return api.setAvatar(data).then((newData) => {
-      setCurrentUser(newData);
+      setCurrentUser(newData.data);
       handleClosePopup();
     });
   };

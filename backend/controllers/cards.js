@@ -1,4 +1,7 @@
 const Card = require("../models/card");
+const NotFoundError = require("../errors/not-found-err.js");
+const BadRequestError = require("../errors/bad-request-err.js");
+const ForbiddenError = require("../errors/forbidden-err.js");
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
@@ -18,7 +21,7 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        err.statusCode = 400;
+        return next(new BadRequestError(err.message));
       }
       next(err);
     });
@@ -27,15 +30,12 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.id)
     .orFail(() => {
-      const error = new Error("No se ha encontrado ninguna tarjeta con esa id");
-      error.statusCode = 404;
-      throw error;
+      throw new NotFoundError("No se ha encontrado ninguna tarjeta con esa id");
     })
+    .then((card) => card.populate("owner", "name avatar"))
     .then((card) => {
-      if (card.owner.toString() !== req.user._id) {
-        const error = new Error("No tienes permiso para borrar esta tarjeta");
-        error.statusCode = 403;
-        throw error;
+      if (card.owner._id.toString() !== req.user._id) {
+        throw new ForbiddenError("No tienes permiso para borrar esta tarjeta");
       }
       return Card.findByIdAndDelete(req.params.id).then((deletedCard) =>
         res.send({ data: deletedCard }),
@@ -43,8 +43,7 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        err.statusCode = 400;
-        err.message = "ID de la tarjeta no valida";
+        return next(new BadRequestError("ID de la tarjeta no valida"));
       }
       next(err);
     });
@@ -61,15 +60,13 @@ module.exports.likeCard = (req, res, next) => {
     },
   )
     .orFail(() => {
-      const error = new Error("No se ha encontrado una card con esa id");
-      error.statusCode = 404;
-      throw error;
+      throw new NotFoundError("No se ha encontrado una card con esa id");
     })
+    .then((card) => card.populate("owner", "name avatar"))
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === "CastError" || err.name === "ValidationError") {
-        err.statusCode = 400;
-        err.message = "ID de la card invalida";
+        return next(new BadRequestError("ID de la card invalida"));
       }
       next(err);
     });
@@ -86,15 +83,13 @@ module.exports.dislikeCard = (req, res, next) => {
     },
   )
     .orFail(() => {
-      const error = new Error("No se ha encontrado una card con esa id");
-      error.statusCode = 404;
-      throw error;
+      throw new NotFoundError("No se ha encontrado una card con esa id");
     })
+    .then((card) => card.populate("owner", "name avatar"))
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === "CastError" || err.name === "ValidationError") {
-        err.statusCode = 400;
-        err.message = "ID de la card invalida";
+        return next(new BadRequestError("ID de la card invalida"));
       }
       next(err);
     });

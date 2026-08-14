@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const UnauthorizedError = require("../errors/unauthorized-err.js");
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -53,15 +54,16 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select("+password")
     .then((user) => {
       if (!user) {
-        console.log(user);
         return Promise.reject(
-          new Error("Correo electrónico o contraseña no válidos."),
+          new UnauthorizedError("Correo electrónico o contraseña no válidos."),
         );
       }
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
           return Promise.reject(
-            new Error("Correo electrónico o contraseña no válidos."),
+            new UnauthorizedError(
+              "Correo electrónico o contraseña no válidos.",
+            ),
           );
         }
         return user;

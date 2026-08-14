@@ -30,10 +30,15 @@ app.use("/users", users);
 app.use("/cards", cards);
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message =
-    statusCode === 500 ? "Error interno del servidor" : err.message;
-  res.status(statusCode).send({ message });
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({
+      message:
+        statusCode === 500
+          ? "Se ha producido un error en el servidor"
+          : message,
+    });
 });
 
 app.listen(PORT, () => {
