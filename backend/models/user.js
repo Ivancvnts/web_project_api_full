@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
       validator: (value) => validator.isEmail(value),
       message: (props) => `${props.value} no es un correo valido`,
     },
-  }, //TODO: Stop DB from sending password in every request
+  },
   password: {
     type: String,
     required: true,
