@@ -1,10 +1,6 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { CurrentUserContext } from "../../../../contexts/CurrentUserContext.js";
 
-/*TODO: Aqui hay un problema que el boton esta desactivado la primera vez
-      que abres el popup, esto se podria arreglar con useEffect? no lo intento
-      por esta ocasion ya que el proyecto pide que sea un componente controlado*/
-
 function EditProfile({ onClose }) {
   const { currentUser, handleUpdateUser } = useContext(CurrentUserContext);
 

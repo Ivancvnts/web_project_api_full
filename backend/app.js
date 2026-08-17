@@ -11,15 +11,15 @@ const { createUser, login } = require("./controllers/users");
 
 const auth = require("./middleware/auth");
 const { requestLogger, errorLogger } = require("./middleware/logger");
+const { PORT = 3000, MONGO_URI = "mongodb://localhost:27017/aroundb" } =
+  process.env;
 
 const app = express();
 
 mongoose
-  .connect("mongodb://localhost:27017/aroundb")
+  .connect(MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch((err) => console.error("Error de conexión:", err));
-
-const { PORT = 5000 } = process.env;
 
 app.use(cors());
 app.use(express.json());
