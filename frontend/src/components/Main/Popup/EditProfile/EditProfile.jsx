@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { CurrentUserContext } from "../../../../contexts/CurrentUserContext.js";
 
 /*TODO: Aqui hay un problema que el boton esta desactivado la primera vez
@@ -14,6 +14,13 @@ function EditProfile({ onClose }) {
   const [descriptionError, setDescriptionError] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    if (formRef.current) {
+      setIsValid(formRef.current.checkValidity());
+    }
+  }, []);
 
   const handleNameChange = (e) => {
     setName(e.target.value);
@@ -38,6 +45,7 @@ function EditProfile({ onClose }) {
       className="popup__form"
       name="profile-form"
       id="edit-profile-form"
+      ref={formRef}
       noValidate
       onSubmit={handleSubmit}
     >
