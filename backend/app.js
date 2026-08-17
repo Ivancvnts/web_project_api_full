@@ -8,7 +8,9 @@ const { errors } = require("celebrate");
 const users = require("./routes/users");
 const cards = require("./routes/cards");
 const { createUser, login } = require("./controllers/users");
+
 const auth = require("./middleware/auth");
+const { requestLogger, errorLogger } = require("./middleware/logger");
 
 const app = express();
 
@@ -22,6 +24,8 @@ const { PORT = 5000 } = process.env;
 app.use(cors());
 app.use(express.json());
 
+app.use(requestLogger);
+
 app.post("/signin", login);
 app.post("/signup", createUser);
 
@@ -30,6 +34,7 @@ app.use(auth);
 app.use("/users", users);
 app.use("/cards", cards);
 
+app.use(errorLogger);
 //Celebrate error controller
 app.use(errors());
 //Error controller
