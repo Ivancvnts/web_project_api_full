@@ -28,7 +28,7 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findById(req.params.id)
+  Card.findById(req.params.cardId)
     .orFail(() => {
       throw new NotFoundError("No se ha encontrado ninguna tarjeta con esa id");
     })
@@ -37,7 +37,7 @@ module.exports.deleteCard = (req, res, next) => {
       if (card.owner._id.toString() !== req.user._id) {
         throw new ForbiddenError("No tienes permiso para borrar esta tarjeta");
       }
-      return Card.findByIdAndDelete(req.params.id).then((deletedCard) =>
+      return Card.findByIdAndDelete(req.params.cardId).then((deletedCard) =>
         res.send({ data: deletedCard }),
       );
     })
